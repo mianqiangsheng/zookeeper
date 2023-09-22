@@ -1,4 +1,4 @@
-package com.msb.zookeeper.locks;
+package com.msb.zookeeper.distributed_lock.locks;
 
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 /**
+ * 和com.msb.zookeeper.distributed_lock.lock.TestLock差不多的逻辑
+ *
  * @author: 马士兵教育
  * @create: 2019-09-20 18:03
  */
@@ -37,6 +39,9 @@ public class WatchCallBack implements Watcher, AsyncCallback.StringCallback, Asy
 
     public void tryLock() {
         //重入
+        /**
+         * 这里没有实现重入吧？
+         */
         try {
             zk.create("/lock", threadName.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL, this, threadName );
             cc.await();

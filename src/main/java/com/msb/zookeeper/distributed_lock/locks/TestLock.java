@@ -1,14 +1,10 @@
-package com.msb.zookeeper.locks;
+package com.msb.zookeeper.distributed_lock.locks;
 
 import com.msb.zookeeper.configurationcenter.*;
 import org.apache.zookeeper.*;
-import org.apache.zookeeper.data.Stat;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author: 马士兵教育

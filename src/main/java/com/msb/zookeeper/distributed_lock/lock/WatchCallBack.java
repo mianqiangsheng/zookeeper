@@ -1,4 +1,4 @@
-package com.msb.zookeeper.lock;
+package com.msb.zookeeper.distributed_lock.lock;
 
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 /**
+ * 分布式锁的实现（一）队列式的公平锁
  * @author: 马士兵教育
  * @create: 2019-09-20 21:26
  */
@@ -47,6 +48,17 @@ public class WatchCallBack   implements Watcher  ,AsyncCallback.StringCallback ,
 
             System.out.println(threadName + "  create....");
 //            if(zk.getData("/"))
+
+            /**
+             * 如果再次获得锁，发现当前持有的锁的线程就是自己，则直接放行（根据查看锁目录下的数据是否是当前线程名）
+             */
+            try {
+                byte[] data = zk.getData("/", false, new Stat());
+                if (threadName.equals(new String(data)))
+                    return;
+            } catch (KeeperException e) {
+                e.printStackTrace();
+            }
             zk.create("/lock",threadName.getBytes(),ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL,this,"abc");
 
             cc.await();
@@ -110,6 +122,9 @@ public class WatchCallBack   implements Watcher  ,AsyncCallback.StringCallback ,
 //            System.out.println(child);
 //        }
 
+        /**
+         * 获取的节点信息不是排序的，需要手动排序一下
+         */
         Collections.sort(children);
         int i = children.indexOf(pathName.substring(1));
 
@@ -119,6 +134,11 @@ public class WatchCallBack   implements Watcher  ,AsyncCallback.StringCallback ,
             //yes
             System.out.println(threadName +" i am first....");
             try {
+                /**
+                 * 设置锁根目录数据为当前排第一的线程名有2个作用
+                 * 1、避免获得锁的线程快速释放锁，而下一个节点的线程还未完成监测的zookeeper逻辑，导致下一个节点的线程永远没机会获得锁
+                 * 2、埋入可重入锁的判断条件
+                 */
                 zk.setData("/",threadName.getBytes(),-1);
                 cc.countDown();
 
@@ -134,6 +154,14 @@ public class WatchCallBack   implements Watcher  ,AsyncCallback.StringCallback ,
 
     }
 
+    /**
+     * 设置zk.exists()的callback函数，
+     * 严谨的话应该也要对zk.exists("/"+children.get(i-1),this,this,"sdf");可能失败的情况做出反应
+     * @param rc
+     * @param path
+     * @param ctx
+     * @param stat
+     */
     @Override
     public void processResult(int rc, String path, Object ctx, Stat stat) {
         //偷懒

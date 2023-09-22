@@ -11,6 +11,9 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 使用框架结合zookeeper实现分布式的各种锁
+ */
 public class InterprocessLock {
 
     private final static CuratorFramework zkClient = getZkClient();

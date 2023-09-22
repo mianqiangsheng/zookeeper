@@ -1,4 +1,4 @@
-package com.msb.zookeeper.lock;
+package com.msb.zookeeper.distributed_lock.lock;
 
 import com.msb.zookeeper.config.ZKUtils;
 import org.apache.zookeeper.ZooKeeper;
